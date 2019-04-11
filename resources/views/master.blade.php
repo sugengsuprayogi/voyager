@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="{{ config('app.locale') }}" dir="{{ __('voyager::generic.is_rtl') == 'true' ? 'rtl' : 'ltr' }}">
 <head>
     <title>@yield('page_title', setting('admin.title') . " - " . setting('admin.description'))</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}"/>
+    <meta name="assets-path" content="{{ route('voyager.assets') }}"/>
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,700" rel="stylesheet">
@@ -17,6 +18,10 @@
     <link rel="stylesheet" href="{{ voyager_asset('css/app.css') }}">
 
     @yield('css')
+    @if(config('voyager.multilingual.rtl'))
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-rtl/3.4.0/css/bootstrap-rtl.css">
+        <link rel="stylesheet" href="{{ voyager_asset('css/rtl.css') }}">
+    @endif
 
     <!-- Few Dynamic Styles -->
     <style type="text/css">
@@ -54,9 +59,10 @@
 </div>
 
 <?php
-$user_avatar = Voyager::image(Auth::user()->avatar);
-if ((substr(Auth::user()->avatar, 0, 7) == 'http://') || (substr(Auth::user()->avatar, 0, 8) == 'https://')) {
-    $user_avatar = Auth::user()->avatar;
+if (starts_with(app('VoyagerAuth')->user()->avatar, 'http://') || starts_with(app('VoyagerAuth')->user()->avatar, 'https://')) {
+    $user_avatar = app('VoyagerAuth')->user()->avatar;
+} else {
+    $user_avatar = Voyager::image(app('VoyagerAuth')->user()->avatar);
 }
 ?>
 
@@ -108,7 +114,6 @@ if ((substr(Auth::user()->avatar, 0, 7) == 'http://') || (substr(Auth::user()->a
 
 <script type="text/javascript" src="{{ voyager_asset('js/app.js') }}"></script>
 
-
 <script>
     @if(Session::has('alerts'))
         let alerts = {!! json_encode(Session::get('alerts')) !!};
@@ -127,11 +132,17 @@ if ((substr(Auth::user()->avatar, 0, 7) == 'http://') || (substr(Auth::user()->a
     } else {
         toastr.error("toastr alert-type " + alertType + " is unknown");
     }
-
     @endif
 </script>
+@include('voyager::media.manager')
+@include('voyager::menu.admin_menu')
+<script>
+new Vue({
+    el: '#adminmenu',
+});
+</script>
 @yield('javascript')
-
+@stack('javascript')
 @if(!empty(config('voyager.additional_js')))<!-- Additional Javascript -->
     @foreach(config('voyager.additional_js') as $js)<script type="text/javascript" src="{{ asset($js) }}"></script>@endforeach
 @endif

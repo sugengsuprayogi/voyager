@@ -4,7 +4,6 @@ namespace TCG\Voyager\Http\Controllers;
 
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use TCG\Voyager\Facades\Voyager;
 
 class VoyagerAuthController extends Controller
@@ -13,7 +12,7 @@ class VoyagerAuthController extends Controller
 
     public function login()
     {
-        if (Auth::user()) {
+        if (app('VoyagerAuth')->user()) {
             return redirect()->route('voyager.dashboard');
         }
 
@@ -52,6 +51,6 @@ class VoyagerAuthController extends Controller
      */
     public function redirectTo()
     {
-        return route('voyager.dashboard');
+        return config('voyager.user.redirect', route('voyager.dashboard'));
     }
 }

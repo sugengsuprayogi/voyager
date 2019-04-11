@@ -8,11 +8,9 @@ class ViewEventTest extends TestCase
 {
     public $eventTrigered = false;
 
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
-
-        $this->install();
 
         $this->disableExceptionHandling();
 
@@ -38,7 +36,7 @@ class ViewEventTest extends TestCase
             $this->eventTrigered = true;
 
             $this->assertEquals('test', $name);
-            $this->assertTrue(isset($parameters['foo']));
+            $this->assertArrayHasKey('foo', $parameters);
             $this->assertEquals('bar', $parameters['foo']);
         });
 

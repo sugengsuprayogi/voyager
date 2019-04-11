@@ -15,11 +15,9 @@ class DatabaseTest extends TestCase
 
     protected $table;
 
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
-
-        $this->install();
 
         // todo: make sure tests are isolated and do not effect other ones
         // todo: interract with Table object directly instead of array?
@@ -51,7 +49,7 @@ class DatabaseTest extends TestCase
     public function test_table_created_successfully()
     {
         // Test correct response
-        $this->assertSessionHasAll($this->alertSuccess(__('voyager.database.success_create_table', ['table' => $this->table['name']])));
+        $this->assertSessionHasAll($this->alertSuccess(__('voyager::database.success_create_table', ['table' => $this->table['name']])));
         $this->assertRedirectedToRoute('voyager.database.index');
 
         // Test table exists
@@ -93,8 +91,6 @@ class DatabaseTest extends TestCase
 
         $this->can_add_index();
 
-        $this->can_change_index();
-
         $this->can_rename_column();
 
         $this->can_drop_column();
@@ -109,7 +105,7 @@ class DatabaseTest extends TestCase
         $this->delete(route('voyager.database.destroy', $this->table['name']));
 
         // Test correct response
-        $this->assertSessionHasAll($this->alertSuccess(__('voyager.database.success_delete_table', ['table' => $this->table['name']])));
+        $this->assertSessionHasAll($this->alertSuccess(__('voyager::database.success_delete_table', ['table' => $this->table['name']])));
         $this->assertRedirectedToRoute('voyager.database.index');
 
         $this->assertFalse(SchemaManager::tableExists($this->table['name']));
@@ -173,7 +169,7 @@ class DatabaseTest extends TestCase
         $newType = 'text';
         $oldType = $this->table['columns'][$column]['type']['name'];
 
-        $this->assertTrue($oldType != $newType);
+        $this->assertNotEquals($oldType, $newType);
 
         $this->table['columns'][$column]['type']['name'] = $newType;
 
@@ -229,21 +225,6 @@ class DatabaseTest extends TestCase
         $this->assertTrue($dbTable->getIndex($indexName)->isUnique());
     }
 
-    protected function can_change_index()
-    {
-        $dbTable = SchemaManager::listTableDetails($this->table['name']);
-
-        $this->assertTrue($dbTable->hasIndex('primary'));
-
-        $dbTable->dropPrimaryKey();
-        $dbTable->addIndex(['id'], 'id_index');
-
-        $dbTable = $this->update_table($dbTable->toArray());
-
-        $this->assertFalse($dbTable->hasIndex('primary'));
-        $this->assertTrue($dbTable->hasIndex('id_index'));
-    }
-
     protected function update_table(array $table)
     {
         // Update table
@@ -252,7 +233,7 @@ class DatabaseTest extends TestCase
         ]);
 
         // Test correct response
-        $this->assertSessionHasAll($this->alertSuccess(__('voyager.database.success_create_table', ['table' => $table['name']])));
+        $this->assertSessionHasAll($this->alertSuccess(__('voyager::database.success_create_table', ['table' => $table['name']])));
         $this->assertRedirectedToRoute('voyager.database.index');
 
         return SchemaManager::listTableDetails($table['name']);

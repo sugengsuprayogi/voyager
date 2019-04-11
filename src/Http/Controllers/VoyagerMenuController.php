@@ -3,6 +3,7 @@
 namespace TCG\Voyager\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use TCG\Voyager\Facades\Voyager;
 
 class VoyagerMenuController extends Controller
@@ -22,7 +23,7 @@ class VoyagerMenuController extends Controller
     {
         $item = Voyager::model('MenuItem')->findOrFail($id);
 
-        $this->authorize('delete', $item->menu);
+        $this->authorize('delete', $item);
 
         $item->deleteAttributeTranslation('title');
 
@@ -31,7 +32,7 @@ class VoyagerMenuController extends Controller
         return redirect()
             ->route('voyager.menus.builder', [$menu])
             ->with([
-                'message'    => __('voyager.menu_builder.successfully_deleted'),
+                'message'    => __('voyager::menu_builder.successfully_deleted'),
                 'alert-type' => 'success',
             ]);
     }
@@ -47,15 +48,7 @@ class VoyagerMenuController extends Controller
         );
 
         unset($data['id']);
-        $data['order'] = 1;
-
-        $highestOrderMenuItem = Voyager::model('MenuItem')->where('parent_id', '=', null)
-            ->orderBy('order', 'DESC')
-            ->first();
-
-        if (!is_null($highestOrderMenuItem)) {
-            $data['order'] = intval($highestOrderMenuItem->order) + 1;
-        }
+        $data['order'] = Voyager::model('MenuItem')->highestOrderMenuItem();
 
         // Check if is translatable
         $_isTranslatable = is_bread_translatable(Voyager::model('MenuItem'));
@@ -74,7 +67,7 @@ class VoyagerMenuController extends Controller
         return redirect()
             ->route('voyager.menus.builder', [$data['menu_id']])
             ->with([
-                'message'    => __('voyager.menu_builder.successfully_created'),
+                'message'    => __('voyager::menu_builder.successfully_created'),
                 'alert-type' => 'success',
             ]);
     }
@@ -102,7 +95,7 @@ class VoyagerMenuController extends Controller
         return redirect()
             ->route('voyager.menus.builder', [$menuItem->menu_id])
             ->with([
-                'message'    => __('voyager.menu_builder.successfully_updated'),
+                'message'    => __('voyager::menu_builder.successfully_updated'),
                 'alert-type' => 'success',
             ]);
     }
@@ -130,7 +123,7 @@ class VoyagerMenuController extends Controller
 
     protected function prepareParameters($parameters)
     {
-        switch (array_get($parameters, 'type')) {
+        switch (Arr::get($parameters, 'type')) {
             case 'route':
                 $parameters['url'] = null;
                 break;

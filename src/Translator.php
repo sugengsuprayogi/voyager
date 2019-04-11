@@ -4,9 +4,10 @@ namespace TCG\Voyager;
 
 use ArrayAccess;
 use Illuminate\Database\Eloquent\Model;
-use TCG\Voyager\Models\Translation;
+use JsonSerializable;
+use TCG\Voyager\Facades\Voyager as VoyagerFacade;
 
-class Translator implements ArrayAccess
+class Translator implements ArrayAccess, JsonSerializable
 {
     protected $model;
     protected $attributes = [];
@@ -59,7 +60,7 @@ class Translator implements ArrayAccess
             if ($attribute['exists']) {
                 $translation = $this->getTranslationModel($key);
             } else {
-                $translation = Translation::where('table_name', $this->model->getTable())
+                $translation = VoyagerFacade::model('Translation')->where('table_name', $this->model->getTable())
                     ->where('column_name', $key)
                     ->where('foreign_key', $this->model->getKey())
                     ->where('locale', $this->locale)
@@ -67,7 +68,7 @@ class Translator implements ArrayAccess
             }
 
             if (is_null($translation)) {
-                $translation = new Translation();
+                $translation = VoyagerFacade::model('Translation');
             }
 
             $translation->fill([
@@ -234,7 +235,7 @@ class Translator implements ArrayAccess
             return false;
         }
 
-        $translation = new Translation();
+        $translation = VoyagerFacade::model('Translation');
         $translation->fill([
             'table_name'  => $this->model->getTable(),
             'column_name' => $key,
@@ -275,7 +276,7 @@ class Translator implements ArrayAccess
         $translations = $this->model->getRelation('translations');
         $locale = $this->locale;
 
-        Translation::where('table_name', $this->model->getTable())
+        VoyagerFacade::model('Translation')->where('table_name', $this->model->getTable())
             ->where('column_name', $key)
             ->where('foreign_key', $this->model->getKey())
             ->where('locale', $locale)
@@ -315,5 +316,12 @@ class Translator implements ArrayAccess
         $method = $this->model->getTranslatorMethod($method);
 
         return call_user_func_array([$this->model, $method], $arguments);
+    }
+
+    public function jsonSerialize()
+    {
+        return array_map(function ($array) {
+            return $array['value'];
+        }, $this->getRawAttributes());
     }
 }
